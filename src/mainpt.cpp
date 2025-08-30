@@ -1,6 +1,8 @@
 #include "PGMpt.h"
 #include <cstring>
 #include <iostream>
+#include <cctype>
+#include <algorithm>
 using namespace std;
 
 string baseName(const char* path) {

@@ -54,7 +54,7 @@ void PGMpt::writeImage(){
     }
 }
 
-static void *applyFilterWorker(void *vargs){
+void *PGMpt::applyFilterWorker(void *vargs){
     FilterArgs *args = (FilterArgs*)vargs;
     PGMpt * p = args->pgm;
     int W = p->W;
@@ -98,43 +98,43 @@ static void *applyFilterWorker(void *vargs){
     return nullptr;
 }
 
-static void applyFilter(PGMpt *p, const float kernel_in[3][3], bool normalize){
+void PGMpt::applyFilter(const float kernel_in[3][3], bool normalize){
     int num_threads = 4;
 
     pthread_t threads[4];
     FilterArgs args[4];
 
-    int base = p->H / num_threads;
-    int rem = p->H % num_threads;
+    int base = H / num_threads;
+    int rem = H % num_threads;
     int cur = 0;
 
     for(int i = 0; i < num_threads; ++i){
         int rows = base + (i < rem ? 1 : 0);
-        args[i].pgm = p;
+        args[i].pgm = this;
         args[i].start = cur;
         args[i].end = cur + rows;
-        args[i].kernel = const_cast<float(*)[3](kernel_in);
+        args[i].kernel = const_cast<float(*)[3]>(kernel_in);
         args[i].normalize = normalize;
-        args[i].output = p->tempImg;
+        args[i].output = tempImg;
         pthread_create(&threads[i], nullptr, applyFilterWorker, &args[i]);
         cur += rows;
     }
 
-    for(int j = 0; j < num_threads; ++j) pthread_join(threads[t], nullptr);
+    for(int j = 0; j < num_threads; ++j) pthread_join(threads[j], nullptr);
 }
 
 /* multithreaded versions (row-splitting) */
-void PGM::blurFilter(int num_threads){
+void PGMpt::blurFilter(){
     // blur uses normalization (divide by sum of weights of valid neighbors)
-    applyFilter(this, blur_kernel, true, num_threads);
+    applyFilter(blur_kernel, true);
 }
 
-void PGM::laplaceFilter(int num_threads){
+void PGMpt::laplaceFilter(){
     // laplace does not normalize
-    applyFilter(this, laplace_kernel, false, num_threads);
+    applyFilter(laplace_kernel, false);
 }
 
-void PGM::sharpenFilter(int num_threads){
+void PGMpt::sharpenFilter(){
     // sharpen does not normalize
-    applyFilter(this, sharpen_kernel, false, num_threads);
+    applyFilter(sharpen_kernel, false);
 }

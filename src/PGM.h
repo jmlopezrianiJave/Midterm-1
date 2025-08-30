@@ -20,9 +20,9 @@ class PGM:public Image{
     };
 
     const float sharpen_kernel[3][3] = {
-        {-1.0f, -1.0f, -1.0f},
-        {-1.0f,  9.0f, -1.0f},
-        {-1.0f, -1.0f, -1.0f}
+        {0.0, -1.0, 0.0},
+        {-1.0,  5.0, -1.0},
+        {0.0, -1.0, 0.0}
     };
 
     public:
