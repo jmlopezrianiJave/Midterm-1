@@ -1,6 +1,6 @@
-#include "PGMpt.h"
+#include "PPMpt.h"
 
-PGMpt::~PGMpt(){
+PPMpt::~PPMpt(){
     if(img){
         for(int i = 0; i < H; i++){
             delete[] img[i];
@@ -15,11 +15,11 @@ PGMpt::~PGMpt(){
     }
 }
 
-void PGMpt::read(){
+void PPMpt::read(){
     char magic[3];
     cin >> magic;
 
-    if(magic[1] != 'P' || magic[0] != '2'){
+    if(magic[1] != 'P' || magic[0] != '3'){
         cerr << "Incorrect format." << endl;
         exit(1);
     }
@@ -30,74 +30,91 @@ void PGMpt::read(){
     }
 
     cin >> W >> H >> mColor;
-    img = new int*[H];
-    tempImg = new int*[H];
+    img = new RGB*[H];
+    tempImg = new RGB*[H];
     for(int i = 0; i < H; i++){
-        img[i] = new int[W];
-        tempImg[i] = new int[W];
+        img[i] = new RGB[W];
+        tempImg[i] = new RGB[W];
     }
 
     for(int i = 0; i < H; i++){
         for(int j = 0; j < W; j++){
-            cin >> img[i][j];
+            cin >> img[i][j].r >> img[i][j].g >> img[i][j].b;
         }
     }
 }
 
-void PGMpt::writeImage(){
-    cout << "P2\n" << W << " " << H << "\n" << mColor << "\n";
+void PPMpt::writeImage(){
+    cout << "P3\n" << W << " " << H << "\n" << mColor << "\n";
     for(int i = 0; i < H; i++){
         for(int j = 0; j < W; j++){
-            cout << tempImg[i][j] << "\n";
+            cout << tempImg[i][j].r << " " << tempImg[i][j].g << " " << tempImg[i][j].b << " ";
         }
         cout << "\n";
     }
 }
 
-void *PGMpt::applyFilterWorker(void *vargs){
-    FilterArgs *args = (FilterArgs*)vargs;
-    PGMpt * p = args->pgm;
+void *PPMpt::applyFilterWorker(void *vargs){
+    FilterArgsPPM *args = (FilterArgsPPM*)vargs;
+    PPMpt * p = args->pgm;
     int W = p->W;
     int H = p->H;
     int mColor = p->mColor;
-    int **img = p->img;
-    int**out = args->output;
+    RGB **img = p->img;
+    RGB**out = args->output;
     float(*kernel)[3] = args->kernel;
     bool normalize = args->normalize;
 
     for(int y = args->start; y < args->end; y++){
         for(int x = 0; x < W; x++){
-            float sum = 0.0;
+            float sumR = 0.0, sumG = 0.0, sumB = 0.0;
             float weight_sum = 0.0;
             for(int ky = -1; ky <= 1; ky++){
                 for(int kx = -1; kx <= 1; kx++){
                     int nx = x + kx;
                     int ny = y + ky;
                     if(nx >= 0 && nx < W && ny >= 0 && ny < H){
-                        sum += img[ny][nx] * kernel[ky+1][kx+1];
+                        sumR += img[ny][nx].r * kernel[ky+1][kx+1];
+                        sumG += img[ny][nx].g * kernel[ky+1][kx+1];
+                        sumB += img[ny][nx].b * kernel[ky+1][kx+1];
                         weight_sum += kernel[ky+1][kx+1];
                     }
                 }
             }
-            int result;
+            int resultR, resultG, resultB;
             if(normalize){
-                if(weight_sum == 0.0) result = static_cast<int>(sum);
-                else result = static_cast<int>(sum / weight_sum);
+                if(weight_sum == 0.0) {
+                    resultR = static_cast<int>(sumR);
+                    resultG = static_cast<int>(sumG);
+                    resultB = static_cast<int>(sumB);
+                }
+                else{
+                    resultR = static_cast<int>(sumR / weight_sum);
+                    resultG = static_cast<int>(sumG / weight_sum);
+                    resultB = static_cast<int>(sumB / weight_sum);
+                }
             } else {
-                result = static_cast<int>(sum);
+                resultR = static_cast<int>(sumR);
+                resultG = static_cast<int>(sumG);
+                resultB = static_cast<int>(sumB);
             }
-            result = max(0, min(mColor, result));
-            out[y][x] = result;
+            resultR = max(0, min(mColor, resultR));
+            resultG = max(0, min(mColor, resultG));
+            resultB = max(0, min(mColor, resultB));
+
+            out[y][x].r = resultR;
+            out[y][x].g = resultG;
+            out[y][x].b = resultB;
         }
     }
     return nullptr;
 }
 
-void PGMpt::applyFilter(const float kernel_in[3][3], bool normalize){
+void PPMpt::applyFilter(const float kernel_in[3][3], bool normalize){
     int num_threads = 4;
 
     pthread_t threads[4];
-    FilterArgs args[4];
+    FilterArgsPPM args[4];
 
     int base = H / num_threads;
     int rem = H % num_threads;
@@ -119,17 +136,17 @@ void PGMpt::applyFilter(const float kernel_in[3][3], bool normalize){
 }
 
 /* multithreaded versions (row-splitting) */
-void PGMpt::blurFilter(){
+void PPMpt::blurFilter(){
     // blur uses normalization (divide by sum of weights of valid neighbors)
     applyFilter(blur_kernel, true);
 }
 
-void PGMpt::laplaceFilter(){
+void PPMpt::laplaceFilter(){
     // laplace does not normalize
     applyFilter(laplace_kernel, false);
 }
 
-void PGMpt::sharpenFilter(){
+void PPMpt::sharpenFilter(){
     // sharpen does not normalize
     applyFilter(sharpen_kernel, false);
 }

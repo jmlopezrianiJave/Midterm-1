@@ -1,4 +1,5 @@
 #include "PGMpt.h"
+#include "PPMpt.h"
 #include <cstring>
 #include <iostream>
 #include <cctype>
@@ -60,31 +61,36 @@ int main(int argc, char *argv[]){
             return 1;
         }
     }
-    // else if(magicNum[0] == 'P' && magicNum[1] == '3'){
-    //     image = new PPM();
-    //     image->read();
+    else if(magicNum[0] == 'P' && magicNum[1] == '3'){
+        image = new PPMpt();
+        image->read();
 
-    //     //blur
-    //     string outFile = "images/" + title + "_blur.ppm";
-    //     FILE* out = freopen(outFile.c_str(), "w", stdout);
-    //     image->blurFilter();
-    //     image->writeImage();
-    //     fclose(out);
-
-    //     //laplace
-    //     outFile = "images/" + title + "_laplace.ppm";
-    //     out = freopen(outFile.c_str(), "w", stdout);
-    //     image->laplaceFilter();
-    //     image->writeImage();
-    //     fclose(out);
-
-    //     //SHARPEN
-    //     outFile = "images/" + title + "_sharpen.ppm";
-    //     out = freopen(outFile.c_str(), "w", stdout);
-    //     image->sharpenFilter();
-    //     image->writeImage();
-    //     fclose(out);
-    // }
+        if(filter == "b"){
+            string outFile = "images/" + title + "_ptblur.ppm";
+            FILE* out = freopen(outFile.c_str(), "w", stdout);
+            image->blurFilter();
+            image->writeImage();
+            fclose(out); 
+        }
+        else if(filter == "l"){
+            string outFile = "images/" + title + "_ptlaplace.ppm";
+            FILE* out = freopen(outFile.c_str(), "w", stdout);
+            image->laplaceFilter();
+            image->writeImage();
+            fclose(out); 
+        }
+        else if(filter == "s"){
+            string outFile = "images/" + title + "_ptsharpen.ppm";
+            FILE* out = freopen(outFile.c_str(), "w", stdout);
+            image->sharpenFilter();
+            image->writeImage();
+            fclose(out); 
+        }
+        else{
+            cerr << "Filter not recognized." << endl;
+            return 1;
+        }
+    }
     else{
         cout << magicNum << endl;
         cerr << "Wrong format." << endl;
