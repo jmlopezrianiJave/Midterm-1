@@ -1,5 +1,5 @@
 #include "PGMomp.h"
-// #include "PPMomp.h"
+#include "PPMomp.h"
 #include <cstring>
 #include <iostream>
 #include <omp.h>
@@ -51,31 +51,32 @@ int main(int argc, char *argv[]){
             }
         }
     }
-    // else if(magicNum[0] == 'P' && magicNum[1] == '3'){
-    //     image = new PPM();
-    //     image->read();
+    else if(magicNum[0] == 'P' && magicNum[1] == '3'){
+        image = new PPMomp();
+        image->read();
+        PPMomp *p = static_cast<PPMomp *>(image);
+        string outBlur  = "images/" + title + "_bluromp.ppm";
+        string outLap   = "images/" + title + "_laplaceomp.ppm";
+        string outSharp = "images/" + title + "_sharpenomp.ppm";
 
-    //     //blur
-    //     string outFile = "images/" + title + "_blur.ppm";
-    //     FILE* out = freopen(outFile.c_str(), "w", stdout);
-    //     image->blurFilter();
-    //     image->writeImage();
-    //     fclose(out);
+        #pragma omp parallel sections
+        {
+            #pragma omp section
+            {
+                p->blurFilter(outBlur.c_str());
+            }
 
-    //     //laplace
-    //     outFile = "images/" + title + "_laplace.ppm";
-    //     out = freopen(outFile.c_str(), "w", stdout);
-    //     image->laplaceFilter();
-    //     image->writeImage();
-    //     fclose(out);
+            #pragma omp section
+            {
+                p->laplaceFilter(outLap.c_str());
+            }
 
-    //     //SHARPEN
-    //     outFile = "images/" + title + "_sharpen.ppm";
-    //     out = freopen(outFile.c_str(), "w", stdout);
-    //     image->sharpenFilter();
-    //     image->writeImage();
-    //     fclose(out);
-    // }
+            #pragma omp section
+            {
+                p->sharpenFilter(outSharp.c_str());
+            }
+        }
+    }
     else{
         cout << magicNum << endl;
         cerr << "Wrong format." << endl;
