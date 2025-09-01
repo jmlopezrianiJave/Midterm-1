@@ -3,6 +3,7 @@
 #include <cstring>
 #include <iostream>
 #include <omp.h>
+#include <chrono>
 using namespace std;
 
 string baseName(const char* path) {
@@ -15,6 +16,8 @@ string baseName(const char* path) {
 }
 
 int main(int argc, char *argv[]){
+    auto start = chrono::high_resolution_clock::now();
+
     Imageomp* image = nullptr;
     freopen(argv[1], "r", stdin);
     string title = baseName(argv[1]);
@@ -82,4 +85,10 @@ int main(int argc, char *argv[]){
         cerr << "Wrong format." << endl;
         return 1;
     }
+
+    auto end = chrono::high_resolution_clock::now();
+    auto ms = chrono::duration_cast<chrono::milliseconds>(end - start).count();
+    cout << "Wall time: " << ms << " ms" << endl;
+
+    return 0;
 }

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cctype>
 #include <algorithm>
+#include <chrono>
 using namespace std;
 
 string baseName(const char* path) {
@@ -16,13 +17,14 @@ string baseName(const char* path) {
 }
 
 int main(int argc, char *argv[]){
+    auto start = chrono::high_resolution_clock::now();
+
     Image* image = nullptr;
-    freopen(argv[1], "r", stdin);
+    (void)freopen(argv[1], "r", stdin);
     string filter = argv[2];
 
     string title = baseName(argv[1]);
     transform(filter.begin(), filter.end(), filter.begin(), [](unsigned char c){ return tolower(c); });
-
 
     char magicNum[3];
     cin >> magicNum;
@@ -96,5 +98,10 @@ int main(int argc, char *argv[]){
         cerr << "Wrong format." << endl;
         return 1;
     }
+
+    auto end = chrono::high_resolution_clock::now();
+    auto ms = chrono::duration_cast<chrono::milliseconds>(end - start).count();
+    cerr << "Wall time: " << ms << " ms" << endl;
+
     return 0;
 }
